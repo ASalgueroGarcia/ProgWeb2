@@ -1,0 +1,8 @@
+@baseUrl = "http://localhost:3000"
+@apiUrl = {{baseUrl}}/api
+
+// === Health check ===
+// Ruta base y health check
+GET {{baseUrl}}/health
+// Info del API 
+GET {{apiUrl}}/
