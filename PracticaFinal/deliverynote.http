@@ -1,0 +1,63 @@
+@baseUrl = http://localhost:3000
+@token = YOUR_JWT_TOKEN
+
+### Crear albarán (horas)
+POST {{baseUrl}}/api/deliverynote
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "client": "CLIENT_ID",
+  "project": "PROJECT_ID",
+  "format": "hours",
+  "description": "Trabajo de pintura",
+  "workDate": "2025-01-15",
+  "hours": 8,
+  "workers": [
+    { "name": "Juan Pérez", "hours": 8 },
+    { "name": "María López", "hours": 6 }
+  ]
+}
+
+### Crear albarán (material)
+POST {{baseUrl}}/api/deliverynote
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "client": "CLIENT_ID",
+  "project": "PROJECT_ID",
+  "format": "material",
+  "description": "Suministro de materiales",
+  "workDate": "2025-01-15",
+  "material": "Cemento",
+  "quantity": 50,
+  "unit": "bolsas"
+}
+
+### Listar albaranes
+GET {{baseUrl}}/api/deliverynote?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Filtrar albaranes
+GET {{baseUrl}}/api/deliverynote?project=PROJECT_ID&client=CLIENT_ID&format=hours&signed=false&from=2025-01-01&to=2025-12-31&sort=-workDate
+Authorization: Bearer {{token}}
+
+### Obtener albarán por ID (populate)
+GET {{baseUrl}}/api/deliverynote/DELIVERYNOTE_ID
+Authorization: Bearer {{token}}
+
+### Descargar PDF del albarán
+GET {{baseUrl}}/api/deliverynote/pdf/DELIVERYNOTE_ID
+Authorization: Bearer {{token}}
+
+### Firmar albarán (con imagen de firma)
+PATCH {{baseUrl}}/api/deliverynote/DELIVERYNOTE_ID/sign
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data
+
+file: @firma.png
+
+### Eliminar albarán (solo si no está firmado)
+DELETE {{baseUrl}}/api/deliverynote/DELIVERYNOTE_ID
+Authorization: Bearer {{token}}

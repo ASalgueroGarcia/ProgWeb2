@@ -1,0 +1,60 @@
+@baseUrl = http://localhost:3000
+@token = YOUR_JWT_TOKEN
+
+### Crear proyecto
+POST {{baseUrl}}/api/project
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Reforma Oficina Central",
+  "projectCode": "PRJ-001",
+  "client": "CLIENT_ID",
+  "email": "proyecto@garcia.com",
+  "notes": "Reforma completa de la oficina",
+  "address": {
+    "street": "Calle Alcalá",
+    "number": "100",
+    "postal": "28009",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+### Listar proyectos
+GET {{baseUrl}}/api/project?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Filtrar proyectos
+GET {{baseUrl}}/api/project?client=CLIENT_ID&active=true&name=Reforma&sort=-createdAt
+Authorization: Bearer {{token}}
+
+### Obtener proyecto por ID
+GET {{baseUrl}}/api/project/PROJECT_ID
+Authorization: Bearer {{token}}
+
+### Actualizar proyecto
+PUT {{baseUrl}}/api/project/PROJECT_ID
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Reforma Oficina Central - Fase 2",
+  "active": false
+}
+
+### Eliminar proyecto (soft)
+DELETE {{baseUrl}}/api/project/PROJECT_ID?soft=true
+Authorization: Bearer {{token}}
+
+### Eliminar proyecto (hard)
+DELETE {{baseUrl}}/api/project/PROJECT_ID
+Authorization: Bearer {{token}}
+
+### Listar proyectos archivados
+GET {{baseUrl}}/api/project/archived
+Authorization: Bearer {{token}}
+
+### Restaurar proyecto archivado
+PATCH {{baseUrl}}/api/project/PROJECT_ID/restore
+Authorization: Bearer {{token}}
