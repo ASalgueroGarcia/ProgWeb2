@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const rateLimit = require("express-rate-limit");
@@ -35,8 +36,10 @@ io.on("connection", (socket) => {
 
 app.set("io", io);
 
+app.use(cors());
 app.use(helmet());
 app.use(express.json());
+//app.use(mongoSanitize({ replaceWith: "_" }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
 
 app.get("/health", (req, res) => {
