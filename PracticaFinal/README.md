@@ -1,4 +1,5 @@
 # BildyApp API
+###### Hecho por Antonio Pedro Salguero Garcia | INSV 3ºC
 
 API REST para la gestión de albaranes entre clientes y proveedores, desarrollada con Node.js y Express.
 
