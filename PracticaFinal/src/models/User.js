@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
   company:   { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
   validated: { type: Boolean, default: false },
   validationCode: String,
-  role:      { type: String, default: "user" },
+  // role ahora distingue 'admin' y 'guest'
+  role:      { type: String, enum: ["admin", "guest", "user"], default: "admin" },
   deleted:   { type: Boolean, default: false }
 }, { timestamps: true });
 module.exports = mongoose.model("User", userSchema);

@@ -20,7 +20,7 @@ jest.mock("../src/services/pdf.service", () => ({
 jest.mock("sharp", () => {
   const chain = {
     resize: () => chain,
-    webp:   () => chain,
+    webp: () => chain,
     toBuffer: () => Promise.resolve(Buffer.from("fake-optimized-image"))
   };
   return jest.fn(() => chain);
@@ -34,7 +34,7 @@ beforeEach(async () => {
   companyId = company._id;
   const user = await User.create({
     name: "Test User", email: "test@test.com",
-    password: "hashed", company: companyId, validated: true
+    password: "hashed", company: companyId, validated: true, role: "admin"
   });
   token = jwt.sign({ id: user._id.toString(), companyId: companyId.toString() }, SECRET);
   const client = await Client.create({ name: "Client A", cif: "A00000001", user: user._id, company: companyId });
@@ -139,7 +139,7 @@ describe("DELETE /api/deliverynote/:id", () => {
 });
 
 describe("GET /api/deliverynote/:id", () => {
-  it("returns populated delivery note", async () => {
+  it("returns populated delivery note to creator", async () => {
     const created = await request(app).post("/api/deliverynote").set("Authorization", `Bearer ${token}`)
       .send({ client: clientId, project: projectId, format: "hours", workDate: "2025-01-15", hours: 6 });
     const res = await request(app).get(`/api/deliverynote/${created.body._id}`)
@@ -159,10 +159,50 @@ describe("GET /api/deliverynote/:id", () => {
     const res = await request(app).get(`/api/deliverynote/${new mongoose.Types.ObjectId()}`);
     expect(res.status).toBe(401);
   });
+
+  // tests de autorización por rol
+  it("returns 403 when a non-creator non-guest user tries to access another user's note", async () => {
+    // El usuario principal (admin) crea el albarán
+    const created = await request(app).post("/api/deliverynote").set("Authorization", `Bearer ${token}`)
+      .send({ client: clientId, project: projectId, format: "hours", workDate: "2025-01-15", hours: 6 });
+
+    // Segundo usuario de la misma compañía, sin ser creador ni guest
+    const otherUser = await User.create({
+      name: "Other User", email: "other@test.com",
+      password: "hashed", company: companyId, validated: true, role: "admin"
+    });
+    const otherToken = jwt.sign({ id: otherUser._id.toString(), companyId: companyId.toString() }, SECRET);
+
+    const res = await request(app).get(`/api/deliverynote/${created.body._id}`)
+      .set("Authorization", `Bearer ${otherToken}`);
+
+    expect(res.status).toBe(403);
+    expect(res.body.message).toContain("permission");
+  });
+
+  it("allows a guest user to access another user's note", async () => {
+    // El usuario principal (admin) crea el albarán
+    const created = await request(app).post("/api/deliverynote").set("Authorization", `Bearer ${token}`)
+      .send({ client: clientId, project: projectId, format: "hours", workDate: "2025-01-15", hours: 6 });
+
+    // Usuario guest de la misma compañía
+    const guestUser = await User.create({
+      name: "Guest User", email: "guest@test.com",
+      password: "hashed", company: companyId, validated: true, role: "guest"
+    });
+    const guestToken = jwt.sign({ id: guestUser._id.toString(), companyId: companyId.toString() }, SECRET);
+
+    const res = await request(app).get(`/api/deliverynote/${created.body._id}`)
+      .set("Authorization", `Bearer ${guestToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("client");
+    expect(res.body).toHaveProperty("project");
+  });
 });
 
 describe("GET /api/deliverynote/pdf/:id", () => {
-  it("downloads delivery note as PDF", async () => {
+  it("downloads delivery note as PDF to creator", async () => {
     const created = await request(app).post("/api/deliverynote").set("Authorization", `Bearer ${token}`)
       .send({ client: clientId, project: projectId, format: "hours", workDate: "2025-01-15", hours: 6 });
     const res = await request(app).get(`/api/deliverynote/pdf/${created.body._id}`)
@@ -174,6 +214,41 @@ describe("GET /api/deliverynote/pdf/:id", () => {
   it("rejects without authentication", async () => {
     const res = await request(app).get(`/api/deliverynote/pdf/${new mongoose.Types.ObjectId()}`);
     expect(res.status).toBe(401);
+  });
+
+  // tests de autorización por rol en PDF
+  it("returns 403 when a non-creator non-guest user tries to download another user's PDF", async () => {
+    const created = await request(app).post("/api/deliverynote").set("Authorization", `Bearer ${token}`)
+      .send({ client: clientId, project: projectId, format: "hours", workDate: "2025-01-15", hours: 6 });
+
+    const otherUser = await User.create({
+      name: "Other User PDF", email: "otherpdf@test.com",
+      password: "hashed", company: companyId, validated: true, role: "admin"
+    });
+    const otherToken = jwt.sign({ id: otherUser._id.toString(), companyId: companyId.toString() }, SECRET);
+
+    const res = await request(app).get(`/api/deliverynote/pdf/${created.body._id}`)
+      .set("Authorization", `Bearer ${otherToken}`);
+
+    expect(res.status).toBe(403);
+    expect(res.body.message).toContain("permission");
+  });
+
+  it("allows a guest user to download another user's PDF", async () => {
+    const created = await request(app).post("/api/deliverynote").set("Authorization", `Bearer ${token}`)
+      .send({ client: clientId, project: projectId, format: "hours", workDate: "2025-01-15", hours: 6 });
+
+    const guestUser = await User.create({
+      name: "Guest PDF User", email: "guestpdf@test.com",
+      password: "hashed", company: companyId, validated: true, role: "guest"
+    });
+    const guestToken = jwt.sign({ id: guestUser._id.toString(), companyId: companyId.toString() }, SECRET);
+
+    const res = await request(app).get(`/api/deliverynote/pdf/${created.body._id}`)
+      .set("Authorization", `Bearer ${guestToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.type).toContain("application/pdf");
   });
 });
 

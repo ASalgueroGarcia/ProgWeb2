@@ -52,6 +52,17 @@ const list = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const assertCanRead = (note, user, next) => {
+  const isCreator = note.user._id
+    ? note.user._id.toString() === user._id.toString()
+    : note.user.toString() === user._id.toString();
+  const isGuest = user.role === "guest";
+  if (!isCreator && !isGuest) {
+    return next(new AppError("You do not have permission to access this delivery note", 403));
+  }
+  return null;
+};
+
 const getOne = async (req, res, next) => {
   try {
     const note = await DeliveryNote.findOne({ _id: req.params.id, company: req.user.company._id })
@@ -59,6 +70,10 @@ const getOne = async (req, res, next) => {
       .populate("client", "name cif")
       .populate("project", "name projectCode");
     if (!note) return next(new AppError("Delivery note not found", 404));
+
+    // verifica que el usuario es el creador o tiene role 'guest'
+    if (assertCanRead(note, req.user, next)) return;
+
     res.json(note);
   } catch (err) { next(err); }
 };
@@ -69,6 +84,9 @@ const getPdf = async (req, res, next) => {
       .populate("client", "name cif address")
       .populate("project", "name projectCode address");
     if (!note) return next(new AppError("Delivery note not found", 404));
+
+    // verifica que el usuario es el creador o tiene role 'guest'
+    if (assertCanRead(note, req.user, next)) return;
 
     if (note.signed && note.pdfUrl) {
       return res.redirect(note.pdfUrl);
