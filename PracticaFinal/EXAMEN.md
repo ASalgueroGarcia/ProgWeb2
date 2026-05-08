@@ -55,6 +55,18 @@ El enunciado especifica que un guest es un "lector de su compañía". Es un rol 
 
 ---
 
+## Proceso
+
+**Tiempo empleado:** aproximadamente 3-4 horas.
+
+**Herramientas utilizadas:** Claude (claude.ai), VS Code, terminal PowerShell.
+
+**Prompts literales utilizados:**
+
+*Han sido una serie de prompts utilizados más que nada para confirmar si algo que habia hecho cuadraba con el enunciado además de para el uso de debugging y apollo en las partes que no sabía realizar.*
+
+---
+
 ## Preguntas socráticas sobre el código
 
 ### 1. ¿Por qué filtrar por `company` no basta para cumplir la regla "solo el creador o un guest"?
